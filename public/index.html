@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MVP Clasificador de Residuos</title>
+    <title>Ecohack MVP Clasificador de residuos</title>
     <style>
       * {
         box-sizing: border-box;
@@ -86,7 +86,7 @@
     </style>
   </head>
   <body>
-    <h1>Clasificador de Residuos 🧪</h1>
+    <h1>Ecohack MVP Clasificador de residuos</h1>
 
     <input type="file" id="fileInput" accept="image/*" />
     <div class="botones" id="botones-container">
@@ -140,42 +140,73 @@
           }
         });
 
+      let usingFrontCamera = true;
+
       function iniciarCamara() {
-        const video = document.createElement("video");
-        video.autoplay = true;
-        video.playsInline = true;
-
-        const captureButton = document.createElement("button");
-        captureButton.innerText = "📷 Capturar";
-        captureButton.style.marginTop = "10px";
-        captureButton.onclick = function () {
-          const canvas = document.createElement("canvas");
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-          window.currentCanvas = canvas;
-          window.currentCtx = ctx;
-
-          const preview = document.getElementById("previewContainer");
-          preview.innerHTML = "";
-          preview.appendChild(canvas);
-
+        if (stream) {
           stream.getTracks().forEach((track) => track.stop());
+        }
+
+        const constraints = {
+          video: {
+            facingMode: usingFrontCamera ? "user" : { exact: "environment" },
+          },
         };
 
         navigator.mediaDevices
-          .getUserMedia({ video: true })
+          .getUserMedia(constraints)
           .then((mediaStream) => {
             stream = mediaStream;
+
+            const video = document.createElement("video");
+            video.autoplay = true;
+            video.playsInline = true;
             video.srcObject = mediaStream;
 
             const preview = document.getElementById("previewContainer");
             preview.innerHTML = "";
             preview.appendChild(video);
+
+            // Elimina botones anteriores si existen
             const botones = document.getElementById("botones-container");
+            const oldButtons = botones.querySelectorAll(".camara-extra");
+            oldButtons.forEach((btn) => btn.remove());
+
+            // Botón de capturar
+            const captureButton = document.createElement("button");
+            captureButton.innerText = "📷 Capturar";
+            captureButton.classList.add("camara-extra");
+            captureButton.style.marginTop = "10px";
+            captureButton.onclick = function () {
+              const canvas = document.createElement("canvas");
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+              window.currentCanvas = canvas;
+              window.currentCtx = ctx;
+
+              const preview = document.getElementById("previewContainer");
+              preview.innerHTML = "";
+              preview.appendChild(canvas);
+
+              stream.getTracks().forEach((track) => track.stop());
+            };
+
+            // Botón de cambiar cámara
+            const switchButton = document.createElement("button");
+            switchButton.innerText = "🔄 Cambiar Cámara";
+            switchButton.classList.add("camara-extra");
+            switchButton.style.marginTop = "10px";
+            switchButton.onclick = function () {
+              usingFrontCamera = !usingFrontCamera;
+              iniciarCamara();
+            };
+
+            // Agrega los nuevos botones
             botones.appendChild(captureButton);
+            botones.appendChild(switchButton);
           })
           .catch((err) => {
             alert("No se pudo acceder a la cámara: " + err);
