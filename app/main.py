@@ -31,3 +31,14 @@ async def clasificar_imagen(file: UploadFile = File(...)):
     objetos = detectar_residuos(temp_path)
     os.remove(temp_path)
     return {"resultado": objetos}
+
+if __name__ == "__main__":
+    import uvicorn
+    from dotenv import load_dotenv
+
+    load_dotenv()  # Carga las variables desde .env
+    import os
+
+    port = int(os.getenv("PORT", 3000))  # Usa 8000 si no se encuentra PORT
+
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
