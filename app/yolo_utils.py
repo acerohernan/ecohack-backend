@@ -17,9 +17,9 @@ model = YOLO(model_path)
 print(f"✅ Modelo cargado desde: {model_path}")
 
 def clasificar_residuo(etiqueta: str) -> str:
-    verdes = ['bottle', 'cup', 'can', 'glass', 'paper', 'cardboard']
+    verdes = ['bottle', 'cup', 'can', 'glass', 'paper', 'cardboard', 'spoon', 'fork', 'knife', 'straw']
     marrones = ['banana', 'apple', 'hot dog', 'orange', 'food']
-    rojos = ['knife', 'scissors', 'battery', 'lighter', 'paint can']
+    rojos = ['scissors', 'battery', 'lighter', 'paint can']
     negros = ['pizza', 'sandwich', 'donut', 'cake', 'styrofoam']
 
     if etiqueta in verdes:

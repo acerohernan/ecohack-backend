@@ -2,23 +2,104 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MVP Clasificador de Residuos</title>
     <style>
-      body { font-family: Arial, text-align: center; margin-top: 30px; }
-      img { max-width: 400px; margin-top: 20px; }
-      .result { margin-top: 20px; text-align: left; max-width: 400px; margin: auto; }
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+        background-color: #f4f4f4;
+      }
+
+      h1 {
+        font-size: 1.8em;
+        margin-bottom: 20px;
+      }
+
+      input[type="file"] {
+        margin-bottom: 10px;
+      }
+
+      .botones {
+        margin: 10px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .botones button {
+        padding: 12px 20px;
+        font-size: 1em;
+        width: 90%;
+        max-width: 300px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+      }
+
+      .botones button:hover {
+        background-color: #0056b3;
+      }
+
+      canvas,
+      video,
+      img {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        margin-top: 20px;
+        border-radius: 10px;
+      }
+
+      .result {
+        background-color: white;
+        padding: 15px;
+        margin-top: 20px;
+        border-radius: 10px;
+        text-align: left;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .result h3 {
+        margin-top: 0;
+      }
+
+      .descargar {
+        margin-top: 15px;
+      }
+
+      @media (min-width: 600px) {
+        .botones {
+          flex-direction: row;
+          justify-content: center;
+        }
+      }
     </style>
   </head>
   <body>
     <h1>Clasificador de Residuos 🧪</h1>
+
     <input type="file" id="fileInput" accept="image/*" />
-    <button onclick="enviarImagen()">Clasificar Imagen</button>
+    <div class="botones" id="botones-container">
+      <button onclick="enviarImagen()">📤 Clasificar Imagen</button>
+      <button onclick="iniciarCamara()">📸 Tomar Foto</button>
+    </div>
 
     <div id="previewContainer"></div>
     <div class="result" id="resultContainer"></div>
 
     <script>
       let selectedFile = null;
+      let stream = null;
 
       const colorMap = {
         verde: "green",
@@ -50,67 +131,133 @@
                 preview.innerHTML = "";
                 preview.appendChild(canvas);
 
-                // Guardamos el canvas y ctx para después
                 canvas.dataset.loaded = "true";
                 window.currentCanvas = canvas;
                 window.currentCtx = ctx;
-                window.currentImg = img;
               };
             };
             reader.readAsDataURL(selectedFile);
           }
         });
 
+      function iniciarCamara() {
+        const video = document.createElement("video");
+        video.autoplay = true;
+        video.playsInline = true;
+
+        const captureButton = document.createElement("button");
+        captureButton.innerText = "📷 Capturar";
+        captureButton.style.marginTop = "10px";
+        captureButton.onclick = function () {
+          const canvas = document.createElement("canvas");
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          window.currentCanvas = canvas;
+          window.currentCtx = ctx;
+
+          const preview = document.getElementById("previewContainer");
+          preview.innerHTML = "";
+          preview.appendChild(canvas);
+
+          stream.getTracks().forEach((track) => track.stop());
+        };
+
+        navigator.mediaDevices
+          .getUserMedia({ video: true })
+          .then((mediaStream) => {
+            stream = mediaStream;
+            video.srcObject = mediaStream;
+
+            const preview = document.getElementById("previewContainer");
+            preview.innerHTML = "";
+            preview.appendChild(video);
+            const botones = document.getElementById("botones-container");
+            botones.appendChild(captureButton);
+          })
+          .catch((err) => {
+            alert("No se pudo acceder a la cámara: " + err);
+          });
+      }
+
       async function enviarImagen() {
-        if (!selectedFile || !window.currentCanvas) {
-          alert("Primero selecciona una imagen");
+        const resultContainer = document.getElementById("resultContainer");
+        resultContainer.innerHTML = "";
+
+        if (!window.currentCanvas) {
+          alert("Primero selecciona o captura una imagen");
           return;
         }
 
+        const blob = await new Promise((resolve) =>
+          window.currentCanvas.toBlob(resolve, "image/jpeg")
+        );
+
         const formData = new FormData();
-        formData.append("file", selectedFile);
+        formData.append("file", blob, "captura.jpg");
 
         const response = await fetch("/clasificar/", {
           method: "POST",
           body: formData,
         });
 
-        const data = await response.json();
-        const container = document.getElementById("resultContainer");
-        container.innerHTML = "<h3>Resultado:</h3>";
+        if (!response.ok) {
+          alert("Error al clasificar la imagen");
+          return;
+        }
 
+        const data = await response.json();
         const ctx = window.currentCtx;
 
+        // Asegurar que el canvas está visible
+        const preview = document.getElementById("previewContainer");
+        preview.innerHTML = "";
+        preview.appendChild(window.currentCanvas);
+
+        resultContainer.innerHTML = "<h3>Resultado:</h3>";
+
         data.resultado.forEach((item) => {
-          if (item.residuo === "no_clasificado") return;
+          if (item.residuo !== "no_clasificado") {
+            const [x1, y1, x2, y2] = item.bbox;
+            const color = colorMap[item.residuo] || "gray";
 
-          const [x1, y1, x2, y2] = item.bbox;
-          const color = colorMap[item.residuo] || "gray";
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
 
-          // Dibujar caja
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 3;
-          ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+            ctx.fillStyle = color;
+            ctx.font = "16px Arial";
+            ctx.fillText(
+              item.etiqueta + " (" + item.residuo + ")",
+              x1 + 5,
+              y1 - 5
+            );
+          }
 
-          // Dibujar texto
-          ctx.fillStyle = color;
-          ctx.font = "16px Arial";
-          ctx.fillText(
-            item.etiqueta + " (" + item.residuo + ")",
-            x1 + 5,
-            y1 - 5
-          );
-
-          // Mostrar también en texto
-          container.innerHTML += `
-        <div>
-          <strong>${item.etiqueta}</strong> → ${item.residuo.toUpperCase()}<br>
-          <small>Ubicación: [${item.bbox
-            .map((n) => n.toFixed(0))
-            .join(", ")}]</small>
-        </div><hr>
-      `;
+          resultContainer.innerHTML += `
+            <div>
+              <strong>${
+                item.etiqueta
+              }</strong> → ${item.residuo.toUpperCase()}<br>
+              <small>Ubicación: [${item.bbox
+                .map((n) => n.toFixed(0))
+                .join(", ")}]</small>
+            </div><hr>`;
         });
+      }
+
+      function descargarImagen() {
+        if (!window.currentCanvas) {
+          alert("No hay imagen para descargar");
+          return;
+        }
+
+        const link = document.createElement("a");
+        link.download = "clasificado.jpg";
+        link.href = window.currentCanvas.toDataURL("image/jpeg");
+        link.click();
       }
     </script>
   </body>
