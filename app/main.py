@@ -16,8 +16,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/web", StaticFiles(directory="public", html=True), name="web")
-
 @app.get("/")
 def root():
     return FileResponse("public/index.html")
@@ -31,6 +29,8 @@ async def clasificar_imagen(file: UploadFile = File(...)):
     objetos = detectar_residuos(temp_path)
     os.remove(temp_path)
     return {"resultado": objetos}
+
+app.mount("/", StaticFiles(directory="public", html=True), name="web")
 
 if __name__ == "__main__":
     import uvicorn
