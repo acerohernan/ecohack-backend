@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>MVP Clasificador de Residuos</title>
+    <style>
+      body { font-family: Arial, text-align: center; margin-top: 30px; }
+      img { max-width: 400px; margin-top: 20px; }
+      .result { margin-top: 20px; text-align: left; max-width: 400px; margin: auto; }
+    </style>
+  </head>
+  <body>
+    <h1>Clasificador de Residuos 🧪</h1>
+    <input type="file" id="fileInput" accept="image/*" />
+    <button onclick="enviarImagen()">Clasificar Imagen</button>
+
+    <div id="previewContainer"></div>
+    <div class="result" id="resultContainer"></div>
+
+    <script>
+      let selectedFile = null;
+
+      const colorMap = {
+        verde: "green",
+        marrón: "brown",
+        rojo: "red",
+        negro: "black",
+        no_clasificado: "gray",
+      };
+
+      document
+        .getElementById("fileInput")
+        .addEventListener("change", function (e) {
+          selectedFile = e.target.files[0];
+
+          if (selectedFile) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+              const img = new Image();
+              img.src = event.target.result;
+
+              img.onload = function () {
+                const canvas = document.createElement("canvas");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext("2d");
+
+                ctx.drawImage(img, 0, 0);
+                const preview = document.getElementById("previewContainer");
+                preview.innerHTML = "";
+                preview.appendChild(canvas);
+
+                // Guardamos el canvas y ctx para después
+                canvas.dataset.loaded = "true";
+                window.currentCanvas = canvas;
+                window.currentCtx = ctx;
+                window.currentImg = img;
+              };
+            };
+            reader.readAsDataURL(selectedFile);
+          }
+        });
+
+      async function enviarImagen() {
+        if (!selectedFile || !window.currentCanvas) {
+          alert("Primero selecciona una imagen");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        const response = await fetch("/clasificar/", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await response.json();
+        const container = document.getElementById("resultContainer");
+        container.innerHTML = "<h3>Resultado:</h3>";
+
+        const ctx = window.currentCtx;
+
+        data.resultado.forEach((item) => {
+          if (item.residuo === "no_clasificado") return;
+
+          const [x1, y1, x2, y2] = item.bbox;
+          const color = colorMap[item.residuo] || "gray";
+
+          // Dibujar caja
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 3;
+          ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+
+          // Dibujar texto
+          ctx.fillStyle = color;
+          ctx.font = "16px Arial";
+          ctx.fillText(
+            item.etiqueta + " (" + item.residuo + ")",
+            x1 + 5,
+            y1 - 5
+          );
+
+          // Mostrar también en texto
+          container.innerHTML += `
+        <div>
+          <strong>${item.etiqueta}</strong> → ${item.residuo.toUpperCase()}<br>
+          <small>Ubicación: [${item.bbox
+            .map((n) => n.toFixed(0))
+            .join(", ")}]</small>
+        </div><hr>
+      `;
+        });
+      }
+    </script>
+  </body>
+</html>
