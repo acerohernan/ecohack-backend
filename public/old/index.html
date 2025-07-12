@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ecohack MVP Clasificador de residuos</title>
+    <link rel="stylesheet" href="./css/index.css" />
+  </head>
+  <body>
+    <h1>Ecohack MVP Clasificador de residuos</h1>
+
+    <input type="file" id="fileInput" accept="image/*" />
+    <div class="botones" id="botones-container">
+      <button onclick="enviarImagen()" id="btnClasificar">📤 Clasificar Imagen</button>
+      <button onclick="iniciarCamara()" id="btnCamara">📸 Tomar Foto</button>
+    </div>
+
+    <div id="previewContainer"></div>
+    <div class="result" id="resultContainer"></div>
+
+    <!-- Loader Modal -->
+    <div id="loaderModal">
+      <div class="loader-content">
+        <div class="loader-spinner"></div>
+        <p>Clasificando imagen... <br><span id="loaderCounter">0</span> segundos</p>
+      </div>
+    </div>
+
+    <script src="./js/index.js"></script>
+  </body>
+</html>

@@ -1,24 +1,263 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ecohack MVP Clasificador de residuos</title>
-    <link rel="stylesheet" href="./css/index.css" />
-  </head>
-  <body>
-    <h1>Ecohack MVP Clasificador de residuos</h1>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicación de Reciclaje Gamificada</title>
+    <link rel="stylesheet" href="./css/index.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Home Screen -->
+            <div id="home-screen" class="screen active">
+                <!-- Profile Avatar -->
+                <div class="profile-avatar">
+                    <div class="avatar-circle">
+                        <div class="avatar-inner"></div>
+                    </div>
+                </div>
 
-    <input type="file" id="fileInput" accept="image/*" />
-    <div class="botones" id="botones-container">
-      <button onclick="enviarImagen()" id="btnClasificar">📤 Clasificar Imagen</button>
-      <button onclick="iniciarCamara()" id="btnCamara">📸 Tomar Foto</button>
+                <!-- Badges -->
+                <div class="badges-container">
+                    <div class="badge">
+                        <span class="badge-icon">🔥</span>
+                        <span class="badge-count">12</span>
+                    </div>
+                    <div class="badge">
+                        <span class="badge-icon">⚡</span>
+                        <span class="badge-count">6</span>
+                    </div>
+                    <div class="badge">
+                        <span class="badge-icon">🏆</span>
+                        <span class="badge-count">2</span>
+                    </div>
+                </div>
+
+                <!-- Level Display -->
+                <div class="level-display">
+                    <h1>NIVEL 5</h1>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 83.12%"></div>
+                        <div class="progress-trophy">🏆</div>
+                    </div>
+                    <div class="progress-text">
+                        <span>8,312 puntos alcanzados</span>
+                        <span>Meta 10,000</span>
+                    </div>
+                </div>
+
+                <!-- Character Avatar -->
+                <div class="character-container">
+                    <div class="character-avatar">
+                        <div class="character-content">
+                            <div class="character-icon">♻️</div>
+                            <div class="character-label">ECO HERO</div>
+                        </div>
+                    </div>
+                    <button class="camera-button" onclick="navigateToCamera()">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                </div>
+
+                <!-- Action Grid -->
+                <div class="action-grid">
+                    <div class="action-item">
+                        <div class="action-icon red">
+                            <i class="fas fa-bullseye"></i>
+                        </div>
+                        <span>Retos</span>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-icon gray">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <span>Tutos</span>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-icon yellow">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <span>Puntos</span>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-icon green">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <span>Premios</span>
+                    </div>
+                </div>
+
+                <!-- Motivational Message -->
+                <div class="motivational-card">
+                    <div class="card-content">
+                        <div class="card-left">
+                            <h3>¡Ya casi lo logras!</h3>
+                        </div>
+                        <div class="card-right">
+                            <div class="remaining-info">
+                                <span class="remaining-label">Puntos restantes <span class="recycle-icon">♻️</span></span>
+                                <div class="remaining-points">1,688</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Camera Screen -->
+            <div id="camera-screen" class="screen">
+                <div class="preview-container" id="previewContainer"></div>
+
+                <!-- Camera Controls -->
+                <div class="camera-controls">
+                    <button class="control-btn" onclick="navigateToHome()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button class="control-btn" onclick="navigateToHome()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Camera Viewfinder -->
+                <div class="camera-viewfinder">
+                    <div id="scanning-state" class="camera-state active">
+                        <div class="scanning-content">
+                            <div class="viewfinder-frame">
+                                <span class="camera-icon">📱</span>
+                            </div>
+                            <p>Enfoca los residuos para identificar</p>
+                            <div id="camera-buttons">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="identified-state" class="camera-state">
+                        <div class="detection-overlay">
+                            <!-- Detection boxes -->
+                            <div class="detection-box" style="top: 25%; left: 25%; width: 128px; height: 96px;">
+                                <div class="detection-label blue">Vasos al tacho azul</div>
+                            </div>
+                            <div class="detection-box" style="top: 50%; right: 25%; width: 112px; height: 80px;">
+                                <div class="detection-label blue">Boletas al tacho azul</div>
+                            </div>
+                            <div class="detection-box" style="bottom: 25%; left: 25%; width: 160px; height: 64px;">
+                                <div class="detection-label black">Envases y bolsas al tacho negro</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="confirmed-state" class="camera-state">
+                        <div class="confirmation-content">
+                            <div class="success-circle">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <p class="success-title">¡Excelente clasificación!</p>
+                            <p class="success-points">+100 puntos obtenidos</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detection Results Modal -->
+                <div id="detection-modal" class="detection-modal">
+                    <div class="modal-content">
+                        <h3>¿Indicaciones claras?</h3>
+                        <p class="modal-subtitle">Tengo dudas</p>
+                        
+                        <div class="points-info">
+                            <div class="points-display">
+                                <span class="star">⭐</span>
+                                <span>100 puntos</span>
+                            </div>
+                            <div class="points-progress">
+                                <div class="points-bar"></div>
+                            </div>
+                        </div>
+
+                        <button class="confirm-btn" onclick="confirmDetection()">
+                            Confirmar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Segregation Modal -->
+                <div id="segregation-modal" class="segregation-modal">
+                    <div class="modal-content">
+                        <!-- <div class="segregation-icon">
+                            <span>📄</span>
+                        </div> -->
+                        <div class="detection-badge">
+                            <span>Elementos reciclables detectados</span>
+                        </div>
+                        <h2>Detección exitosa</h2>
+                        <p class="confirm-text">confirmar</p>
+
+                        <div class="points-info">
+                            <div class="points-display">
+                                <span class="star">⭐</span>
+                                <span>100 puntos</span>
+                            </div>
+                            <div class="points-progress">
+                                <div class="points-bar"></div>
+                            </div>
+                        </div>
+
+                        <button class="take-photo-btn" onclick="navigateToHome()">
+                            Continuar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other Screens -->
+            <div id="retos-screen" class="screen">
+                <div class="placeholder-content">
+                    <h1>Sección de Retos</h1>
+                    <p>Próximamente disponible</p>
+                </div>
+            </div>
+
+            <div id="ajustes-screen" class="screen">
+                <div class="placeholder-content">
+                    <h1>Configuración</h1>
+                    <p>Próximamente disponible</p>
+                </div>
+            </div>
+
+            <div id="tiendas-screen" class="screen">
+                <div class="placeholder-content">
+                    <h1>Tienda de Premios</h1>
+                    <p>Próximamente disponible</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-navigation" id="bottom-nav">
+            <button class="nav-item active" data-screen="home">
+                <i class="fas fa-chart-bar"></i>
+                <span>Inicio</span>
+            </button>
+            <button class="nav-item" data-screen="retos">
+                <i class="fas fa-bullseye"></i>
+                <span>Retos</span>
+            </button>
+            <button class="nav-item" data-screen="ajustes">
+                <i class="fas fa-cog"></i>
+                <span>Ajustes</span>
+            </button>
+            <button class="nav-item" data-screen="tiendas">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Tiendas</span>
+            </button>
+        </nav>
     </div>
 
-    <div id="previewContainer"></div>
-    <div class="result" id="resultContainer"></div>
-
-    <!-- Loader Modal -->
     <div id="loaderModal">
       <div class="loader-content">
         <div class="loader-spinner"></div>
@@ -27,5 +266,5 @@
     </div>
 
     <script src="./js/index.js"></script>
-  </body>
+</body>
 </html>
