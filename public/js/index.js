@@ -430,7 +430,7 @@ async function enviarImagen() {
     // resultContainer.innerHTML = "<h3>Resultado:</h3>";
 
     data.resultado.forEach((item) => {
-      if (item.residuo !== "no_clasificado") {
+      if (item.residuo === "verde") {
       const [x1, y1, x2, y2] = item.bbox;
       const color = colorMap[item.residuo] || "gray";
 
